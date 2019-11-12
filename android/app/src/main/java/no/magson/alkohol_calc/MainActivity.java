@@ -1,4 +1,4 @@
-package com.example.alkohol_calc;
+package no.magson.alkohol_calc;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;
