@@ -37,7 +37,9 @@ class SettingScreen extends StatelessWidget {
                 },
                 onChanged: (String weight) {
                   print(weight);
-                  save(int.parse(weight));
+                  if (int.parse(weight) > 10) {
+                    save(int.parse(weight));
+                  }
                 }),
           ],
         ),
@@ -47,7 +49,7 @@ class SettingScreen extends StatelessWidget {
 
   Future<int> load() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-	int weight = prefs.getInt('weight');
+    int weight = prefs.getInt('weight');
     return weight;
   }
 
