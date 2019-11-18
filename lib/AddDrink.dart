@@ -14,7 +14,7 @@ class _AddDrinkState extends State<AddDrink> {
   List<Map> drinks = [
     {
       'name': 'Beer',
-      'alcoholPercentage': 5,
+      'alcoholPercentage': 4.7,
       'size': 5,
       'quantity': 1,
       'img': 'assets/beer.png'
@@ -27,9 +27,9 @@ class _AddDrinkState extends State<AddDrink> {
       'img': 'assets/shot.jpg'
     },
     {
-      'name': 'Glass of wine',
+      'name': 'Bottle of wine',
       'alcoholPercentage': 12,
-      'size': 2,
+      'size': 7.5,
       'quantity': 1,
       'img': 'assets/wine.png'
     }
