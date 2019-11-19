@@ -121,7 +121,7 @@ class _HomePageState extends State<HomePage> {
                       child: Text(
                         totalBAC == 0.0
                             ? 'You are sober'
-                            : 'Last drink ' +
+                            : 'Started drinking ' +
                                 durSinceLastDrink.inMinutes.toString() +
                                 'min ago · Sober at ' +
                                 DateFormat('kk:mm').format(soberAt) +
@@ -157,30 +157,57 @@ class _HomePageState extends State<HomePage> {
                     return InkWell(
                       child: DrinkGridElement(drink: consumedDrinks[idx]),
                       onLongPress: () {
+                        List<Widget> actions;
+                        if (consumedDrinks[idx]['quantity'] > 1) {
+                          actions = [
+                            FlatButton(
+                              child: Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text('Delete all'),
+                              onPressed: () {
+                                deleteDrink(idx).then((_) => setState(() {}));
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text('Delete one'),
+                              onPressed: () {
+                                setState(() {
+                                  deleteOneDrink(idx);
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ];
+                        } else {
+                          actions = <Widget>[
+                            FlatButton(
+                              child: Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text('Yes'),
+                              onPressed: () {
+                                deleteDrink(idx).then((_) => setState(() {}));
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ];
+                        }
                         showDialog(
                             context: context,
                             builder: (context) {
                               return AlertDialog(
-                                title: Text('Delete'),
-                                content: Text(
-                                    'Are you sure you want to remove this drink from your consumed drinks?'),
-                                actions: <Widget>[
-                                  FlatButton(
-                                    child: Text('Cancel'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                  FlatButton(
-                                    child: Text('Yes'),
-                                    onPressed: () {
-                                      deleteDrink(idx)
-                                          .then((_) => setState(() {}));
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              );
+                                  title: Text('Delete'),
+                                  content: Text(
+                                      'Are you sure you want to remove this drink from your consumed drinks?'),
+                                  actions: actions);
                             });
                       },
                     );
@@ -235,6 +262,26 @@ class _HomePageState extends State<HomePage> {
     prefs.setString('consumedDrinks', json.encode(consumedDrinks));
     startDrinkingTime = null;
     prefs.remove('startDrinkingTime');
+  }
+
+  Future<bool> deleteOneDrink(int idx) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Load previous drinks
+    String x = prefs.getString('consumedDrinks');
+    List<Map> drinks;
+
+    if (x != null) {
+      drinks = List<Map>.from(json.decode(x));
+    } else {
+      drinks = [];
+    }
+
+    // Add new drink
+    drinks[idx]['quantity']--;
+
+    // Save
+    return prefs.setString('consumedDrinks', json.encode(drinks));
   }
 
   Future<bool> deleteDrink(int idx) async {

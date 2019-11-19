@@ -99,11 +99,27 @@ class _AddDrinkState extends State<AddDrink> {
 
     if (x != null) {
       drinks = List<Map>.from(json.decode(x));
-    } else {drinks = [];
+    } else {
+      drinks = [];
+
+      // This is first drink
+      // TODO: Confirm start drinking time
+
     }
 
-    // Add new drink
-    drinks.add(drink);
+    bool addedToExistingDrink = false;
+    drinks.forEach((d) {
+      if (d['name'] == drink['name'] &&
+          d['alcoholPercentage'] == drink['alcoholPercentage'] &&
+          d['img'] == drink['img']) {
+        addedToExistingDrink = true;
+        d['quantity']++;
+      }
+    });
+    if (!addedToExistingDrink) {
+      // Add new drink
+      drinks.add(drink);
+    }
 
     if (drinks.length == 1) {
       prefs.setString('startDrinkingTime', DateTime.now().toIso8601String());
