@@ -7,6 +7,7 @@ import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/animation.dart';
 
 void main() {
   runApp(MyApp());
@@ -31,11 +32,32 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   List<Map> consumedDrinks = [];
   int weight = 70;
   double totalBAC = 0.0;
   DateTime startDrinkingTime;
+
+  // Expandable appbar
+  AnimationController controller;
+  Animation<double> animation;
+  bool expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    controller =
+        AnimationController(duration: Duration(milliseconds: 200), vsync: this);
+    animation = Tween<double>(begin: 85, end: 250)
+        .animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
+  }
+
+  _animateAppBar() {
+    expanded ? controller.reverse() : controller.forward();
+    setState(() {});
+    expanded = !expanded;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,37 +128,53 @@ class _HomePageState extends State<HomePage> {
               )
             ],
             bottom: PreferredSize(
-              preferredSize: Size.fromHeight(70.0),
-              child: Container(
-                height: 70,
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      currentBAC.toStringAsFixed(2).toString(),
-                      style:
-                          TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              preferredSize: Size.fromHeight(animation.value),
+              child: Stack(
+                children: <Widget>[
+                  Container(
+                    width: double.infinity,
+                    height: animation.value,
+                    child: Column(
+                      children: <Widget>[
+                        Text(
+                          currentBAC.toStringAsFixed(2).toString() + '‰',
+                          style: TextStyle(
+                              fontSize: 30, fontWeight: FontWeight.bold),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            totalBAC == 0.0
+                                ? 'You are sober'
+                                : 'Started drinking ' +
+                                    durSinceLastDrink.inMinutes.toString() +
+                                    'min ago · Sober at ' +
+                                    DateFormat('kk:mm').format(soberAt) +
+                                    ' (' +
+                                    soberAt
+                                        .difference(DateTime.now())
+                                        .inHours
+                                        .toString() +
+                                    'h)',
+                            maxLines: 1,
+                            overflow: TextOverflow.fade,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        totalBAC == 0.0
-                            ? 'You are sober'
-                            : 'Started drinking ' +
-                                durSinceLastDrink.inMinutes.toString() +
-                                'min ago · Sober at ' +
-                                DateFormat('kk:mm').format(soberAt) +
-                                ' (' +
-                                soberAt
-                                    .difference(DateTime.now())
-                                    .inHours
-                                    .toString() +
-                                'h)',
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                      ),
-                    )
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_drop_down),
+                      onPressed: () {
+                        _animateAppBar();
+                      },
+                    ),
+                    right: 0,
+                    top: 27,
+                  )
+                ],
               ),
             ),
           ),
@@ -302,5 +340,11 @@ class _HomePageState extends State<HomePage> {
 
     // Save
     return prefs.setString('consumedDrinks', json.encode(drinks));
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 }
